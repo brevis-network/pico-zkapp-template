@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-pico-entry = { path = "../../brevis-vm/pico/entrypoint" }
+pico-sdk = { path = "../../brevis-vm/pico/sdk" }

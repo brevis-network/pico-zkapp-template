@@ -1,8 +1,11 @@
 #![no_main]
-pico_entry::entrypoint!(main);
+
+pico_sdk::entrypoint!(main);
+use pico_sdk::io::read;
+use pico_sdk::io::commit;
 
 pub fn main() {
-    let n = 10;
+    let n: i32 = read();
     let mut a: u64 = 0;
     let mut b: u64 = 1;
     for _ in 0..n {
@@ -10,5 +13,5 @@ pub fn main() {
         a = b;
         b = c;
     }
-    println!("a: {}, b: {}", a, b);
+    commit(&b);
 }
