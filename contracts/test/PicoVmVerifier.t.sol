@@ -46,6 +46,7 @@ contract PicoVmVerifierTest is Test {
             uint256(0x1af6370a493d456616103e8a1abc1fc88d5f759307677d7f28004efcddf8d507)
         ];
 
+        // Intentionally modify the last bit of the input to simulate an incorrect proof.
         uint256[2] memory input = [
             uint256(0x007dca4a2b032787d3a2bc870aa6c40856227432ab65876e68c709bceed45933),
             uint256(0x10abd303eefe48a35a09197c8840467029bde2832f61695991207d60fb6a2355)

@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 pico-sdk = { path = "../../brevis-vm/pico/sdk" }
+alloy-sol-types = "0.8.0"
