@@ -28,5 +28,4 @@ pub fn main() {
     let bytes = PublicValuesStruct::abi_encode(&PublicValuesStruct { n, a, b });
 
     commit_bytes(&bytes);
-    println!("bytes: {:?}", bytes);
 }
