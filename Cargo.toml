@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 pico-sdk = { git = "https://github.com/brevis-network/brevis-vm.git", branch = "cli" }
+serde = { version = "1.0.205", features = ["derive"] }

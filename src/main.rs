@@ -3,6 +3,14 @@
 pico_sdk::entrypoint!(main);
 use pico_sdk::io::read_as;
 use pico_sdk::io::commit;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct FibonacciData {
+    n: i32,
+    a: u64,
+    b: u64,
+}
 
 pub fn main() {
     let n: i32 = read_as();
@@ -13,5 +21,10 @@ pub fn main() {
         a = b;
         b = c;
     }
-    commit(&b);
+    let data = FibonacciData {
+        n,
+        a,
+        b,
+    };
+    commit(&data);
 }
