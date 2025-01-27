@@ -1,0 +1,9 @@
+[package]
+name = "scripts"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+pico-sdk = { path = "../../../temp-brevis-vm/pico/sdk" }
+#alloy-sol-types = { workspace = true }
+#program = { path = "../program" }

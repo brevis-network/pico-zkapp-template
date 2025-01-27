@@ -1,8 +1,8 @@
-[package]
-name = "$PROJECT_NAME$"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = [
+    "program", "scripts",
+]
+resolver = "2"
 
-[dependencies]
-pico-sdk = { path = "../../brevis-vm/pico/sdk" }
-alloy-sol-types = "0.8.0"
+[workspace.dependencies]
+alloy-sol-types = "0.8.19"
