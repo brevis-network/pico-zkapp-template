@@ -254,6 +254,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 
 [[package]]
+name = "app"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "fibonacci-lib",
+ "pico-sdk",
+]
+
+[[package]]
 name = "ark-ff"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1182,6 +1191,13 @@ name = "fiat-crypto"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
+
+[[package]]
+name = "fibonacci-lib"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+]
 
 [[package]]
 name = "fixed-hash"
@@ -2533,14 +2549,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "program"
-version = "0.1.0"
-dependencies = [
- "alloy-sol-types",
- "pico-sdk",
-]
-
-[[package]]
 name = "proptest"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2558,6 +2566,17 @@ dependencies = [
  "rusty-fork",
  "tempfile",
  "unarray",
+]
+
+[[package]]
+name = "prover"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "bincode",
+ "fibonacci-lib",
+ "pico-sdk",
+ "serde",
 ]
 
 [[package]]
@@ -2868,13 +2887,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "scripts"
-version = "0.1.0"
-dependencies = [
- "pico-sdk",
-]
 
 [[package]]
 name = "sec1"
