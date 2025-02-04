@@ -1,0 +1,9 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+pico-sdk = { path = "../../../brevis-vm/pico/sdk" }
+alloy-sol-types = { workspace = true }
+fibonacci-lib ={ path = "../lib"}
