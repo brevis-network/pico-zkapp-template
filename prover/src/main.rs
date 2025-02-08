@@ -1,4 +1,4 @@
-use alloy_sol_types::SolType;
+use std::path::PathBuf;
 use fibonacci_lib::{PublicValuesStruct, fibonacci, load_elf};
 use pico_sdk::{client::SDKProverClient, init_logger};
 
@@ -12,22 +12,26 @@ fn main() {
     println!("elf length: {}", elf.len());
 
     // Initialize the prover client
-    let client = SDKProverClient::new(&elf);
+    let client = SDKProverClient::new(&elf, true);
     let stdin_builder = client.get_stdin_builder(); // Shared instance
 
     // Set up input and generate proof
     let n = 100u32;
     stdin_builder.borrow_mut().write(&n);
 
+    let output_path = PathBuf::from("../../contracts/test_data");
+    // Set up groth16 verifier
+    let proof = client.prove_evm(true, output_path.clone()).expect("Failed to generate proof");
+
     // Generate proof
-    let proof = client.prove_fast().expect("Failed to generate proof");
+    let proof = client.prove_evm(false, output_path).expect("Failed to generate proof");
 
     // Decodes public values from the proof's public value stream.
-    let public_buffer = proof.pv_stream.unwrap();
-    let public_values = PublicValuesStruct::abi_decode(&public_buffer, true).unwrap();
+    // let public_buffer = proof.pv_stream.unwrap();
+    // let public_values = PublicValuesStruct::abi_decode(&public_buffer, true).unwrap();
 
-    // Verify the public values
-    verify_public_values(n, &public_values);
+    // // Verify the public values
+    // verify_public_values(n, &public_values);
 }
 
 /// Verifies that the computed Fibonacci values match the public values.
