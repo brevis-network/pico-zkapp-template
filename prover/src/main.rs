@@ -9,10 +9,8 @@ fn main() {
     // Load the ELF file
     let elf = load_elf("../elf/riscv32im-pico-zkvm-elf");
 
-    println!("elf length: {}", elf.len());
-
     // Initialize the prover client
-    let client = SDKProverClient::new(&elf);
+    let client = SDKProverClient::new(&elf, false);
     let stdin_builder = client.get_stdin_builder(); // Shared instance
 
     // Set up input and generate proof
