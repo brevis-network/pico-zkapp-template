@@ -8,20 +8,21 @@ import {PicoVmVerifier} from "./PicoVmVerifier.sol";
 /// @author Brevis Network
 /// @notice This contracts implements a solidity verifier for Pico.
 contract PicoVerifier is PicoVmVerifier, IPicoVerifier {
-
     /// @notice Thrown when the proof is invalid.
     error InvalidProof();
 
     /// @notice Hashes the public values to a field elements inside Bn254.
     /// @param publicValues The public values.
-    function hashPublicValues(bytes calldata publicValues) public pure returns (bytes32) {
+    function hashPublicValues(
+        bytes calldata publicValues
+    ) public pure returns (bytes32) {
         return sha256(publicValues) & bytes32(uint256((1 << 253) - 1));
     }
 
-    /// @notice Verifies a proof with given public values and riscv vkey.
+    /// @notice Verifies a proof with given public values and riscv verification key.
     /// @param riscvVkey The verification key for the RISC-V program.
     /// @param publicValues The public values encoded as bytes.
-    /// @param proof The proof of the riscv program execution in the Pico zkVM.
+    /// @param proof The proof of the riscv program execution in the Pico.
     function verifyPicoProof(
         bytes32 riscvVkey,
         bytes calldata publicValues,

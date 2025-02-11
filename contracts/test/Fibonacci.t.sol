@@ -17,13 +17,22 @@ contract FibonacciTest is Test {
 
     function setUp() public {
         // Read and parse the input data from the JSON file
-        // The command `cargo pico prove --evm` generates the JSON file in `target/pico_out/input.json`
-        string memory filePath = "./test_data/fibonacci.json";
+        // The JSON file is produced by running the command: `cargo pico prove --evm --output`
+        string memory filePath = "./test_data/input.json";
         string memory jsonContent = vm.readFile(filePath);
 
-        fibonacciKey = abi.decode(vm.parseJson(jsonContent, ".riscvVKey"), (bytes32));
-        publicValues = abi.decode(vm.parseJson(jsonContent, ".publicValues"), (bytes));
-        bytes32[] memory proofBytes32 = abi.decode(vm.parseJson(jsonContent, ".proof"), (bytes32[]));
+        fibonacciKey = abi.decode(
+            vm.parseJson(jsonContent, ".riscvVKey"),
+            (bytes32)
+        );
+        publicValues = abi.decode(
+            vm.parseJson(jsonContent, ".publicValues"),
+            (bytes)
+        );
+        bytes32[] memory proofBytes32 = abi.decode(
+            vm.parseJson(jsonContent, ".proof"),
+            (bytes32[])
+        );
 
         for (uint256 i = 0; i < proofBytes32.length; i++) {
             proof[i] = uint256(proofBytes32[i]);
@@ -38,7 +47,7 @@ contract FibonacciTest is Test {
     // Test that the Fibonacci proof verification passes with real proof data
     function testValidFibonacciProof() public view {
         (uint32 n, uint32 a, uint32 b) = fibonacci.verifyFibonacciProof(
-            publicValues, 
+            publicValues,
             proof
         );
 
@@ -48,14 +57,11 @@ contract FibonacciTest is Test {
     }
 
     // This test is expected to fail (revert) when providing invalid proof
-    function testInvalidFibonacciProof() public{
+    function testInvalidFibonacciProof() public {
         vm.expectRevert();
         // Set up an invalid proof
         uint256[8] memory invalidProof = [uint256(0), 0, 0, 0, 0, 0, 0, 0];
 
-        fibonacci.verifyFibonacciProof(
-            publicValues, 
-            invalidProof
-        );
+        fibonacci.verifyFibonacciProof(publicValues, invalidProof);
     }
 }

@@ -27,14 +27,20 @@ contract Fibonacci {
     /// @notice The entrypoint for verifying the proof of a fibonacci program.
     /// @param _proof The proof.
     /// @param _publicValues The encoded public values, which can also be used for zkApp.
-    function verifyFibonacciProof(bytes calldata _publicValues, uint256[8] calldata _proof)
-        public
-        view
-        returns (uint32, uint32, uint32)
-    {
+    function verifyFibonacciProof(
+        bytes calldata _publicValues,
+        uint256[8] calldata _proof
+    ) public view returns (uint32, uint32, uint32) {
         // Constrain riscvVKey to be equal to fibonacciVKey.
-        IPicoVerifier(verifier).verifyPicoProof(fibonacciVKey, _publicValues, _proof);
-        PublicValuesStruct memory publicValues = abi.decode(_publicValues, (PublicValuesStruct));
+        IPicoVerifier(verifier).verifyPicoProof(
+            fibonacciVKey,
+            _publicValues,
+            _proof
+        );
+        PublicValuesStruct memory publicValues = abi.decode(
+            _publicValues,
+            (PublicValuesStruct)
+        );
         return (publicValues.n, publicValues.a, publicValues.b);
     }
 }
