@@ -2,12 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {IPicoVerifier} from "./IPicoVerifier.sol";
-import {PicoVmVerifier} from "./PicoVmVerifier.sol";
+import {Groth16Verifier} from "./Groth16Verifier.sol";
 
 /// @title Pico Verifier
 /// @author Brevis Network
 /// @notice This contracts implements a solidity verifier for Pico.
-contract PicoVerifier is PicoVmVerifier, IPicoVerifier {
+contract PicoVerifier is Groth16Verifier, IPicoVerifier {
     /// @notice Thrown when the proof is invalid.
     error InvalidProof();
 

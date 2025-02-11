@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
@@ -9,8 +8,7 @@ pragma solidity ^0.8.0;
 /// (256 bytes) and compressed (128 bytes) format. A view function is provided
 /// to compress proofs.
 /// @notice See <https://2π.com/23/bn254-compression> for further explanation.
-contract PicoVmVerifier {
-    
+contract Groth16Verifier {
     /// Some of the provided public input values are larger than the field modulus.
     /// @dev Public input elements are not automatically reduced, as this is can be
     /// a dangerous source of bugs.
@@ -33,10 +31,13 @@ contract PicoVmVerifier {
     //     t = 4965661367192848881
     //     P = 36⋅t⁴ + 36⋅t³ + 24⋅t² + 6⋅t + 1
     //     R = 36⋅t⁴ + 36⋅t³ + 18⋅t² + 6⋅t + 1
-    uint256 constant P = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
-    uint256 constant R = 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001;
+    uint256 constant P =
+        0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
+    uint256 constant R =
+        0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001;
 
-	uint256 constant MOD_R = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    uint256 constant MOD_R =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     // Extension field Fp2 = Fp[i] / (i² + 1)
     // Note: This is the complex extension field of Fp with i² = -1.
@@ -46,43 +47,68 @@ contract PicoVmVerifier {
     //       Fp2 elements are encoded in the public interface as this became convention.
 
     // Constants in Fp
-    uint256 constant FRACTION_1_2_FP = 0x183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea4;
-    uint256 constant FRACTION_27_82_FP = 0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5;
-    uint256 constant FRACTION_3_82_FP = 0x2fcd3ac2a640a154eb23960892a85a68f031ca0c8344b23a577dcf1052b9e775;
+    uint256 constant FRACTION_1_2_FP =
+        0x183227397098d014dc2822db40c0ac2ecbc0b548b438e5469e10460b6c3e7ea4;
+    uint256 constant FRACTION_27_82_FP =
+        0x2b149d40ceb8aaae81be18991be06ac3b5b4c5e559dbefa33267e6dc24a138e5;
+    uint256 constant FRACTION_3_82_FP =
+        0x2fcd3ac2a640a154eb23960892a85a68f031ca0c8344b23a577dcf1052b9e775;
 
     // Exponents for inversions and square roots mod P
-    uint256 constant EXP_INVERSE_FP = 0x30644E72E131A029B85045B68181585D97816A916871CA8D3C208C16D87CFD45; // P - 2
-    uint256 constant EXP_SQRT_FP = 0xC19139CB84C680A6E14116DA060561765E05AA45A1C72A34F082305B61F3F52; // (P + 1) / 4;
+    uint256 constant EXP_INVERSE_FP =
+        0x30644E72E131A029B85045B68181585D97816A916871CA8D3C208C16D87CFD45; // P - 2
+    uint256 constant EXP_SQRT_FP =
+        0xC19139CB84C680A6E14116DA060561765E05AA45A1C72A34F082305B61F3F52; // (P + 1) / 4;
 
     // Groth16 alpha point in G1
-    uint256 constant ALPHA_X = 14314501919518882090394717447484555264755445938318850570259943576280036560234;
-    uint256 constant ALPHA_Y = 3464648138172536097502275058139617482973938302385152608868192314471767203155;
+    uint256 constant ALPHA_X =
+        14314501919518882090394717447484555264755445938318850570259943576280036560234;
+    uint256 constant ALPHA_Y =
+        3464648138172536097502275058139617482973938302385152608868192314471767203155;
 
     // Groth16 beta point in G2 in powers of i
-    uint256 constant BETA_NEG_X_0 = 6301614410365648236477659703049115586741400600403941213592519892358054277196;
-    uint256 constant BETA_NEG_X_1 = 20494049465257480578881509379970270683346221260359401500486806666098665786693;
-    uint256 constant BETA_NEG_Y_0 = 7215779474301472713107354522254721291137546473301694130937778650984830543535;
-    uint256 constant BETA_NEG_Y_1 = 11170495905233158288958972374631192425415327066545957805692740293707916865201;
+    uint256 constant BETA_NEG_X_0 =
+        6301614410365648236477659703049115586741400600403941213592519892358054277196;
+    uint256 constant BETA_NEG_X_1 =
+        20494049465257480578881509379970270683346221260359401500486806666098665786693;
+    uint256 constant BETA_NEG_Y_0 =
+        7215779474301472713107354522254721291137546473301694130937778650984830543535;
+    uint256 constant BETA_NEG_Y_1 =
+        11170495905233158288958972374631192425415327066545957805692740293707916865201;
 
     // Groth16 gamma point in G2 in powers of i
-    uint256 constant GAMMA_NEG_X_0 = 16926401939035435925207271079315543750710841879979608148855549260327049702240;
-    uint256 constant GAMMA_NEG_X_1 = 12182659355901135751088565947172305911060559604964753298951922014799099783845;
-    uint256 constant GAMMA_NEG_Y_0 = 9504191999511692283011365386228822714468509627829428108854996030132542865283;
-    uint256 constant GAMMA_NEG_Y_1 = 10685481643380945799692608326769918793248842567825873124661643766522511566027;
+    uint256 constant GAMMA_NEG_X_0 =
+        16926401939035435925207271079315543750710841879979608148855549260327049702240;
+    uint256 constant GAMMA_NEG_X_1 =
+        12182659355901135751088565947172305911060559604964753298951922014799099783845;
+    uint256 constant GAMMA_NEG_Y_0 =
+        9504191999511692283011365386228822714468509627829428108854996030132542865283;
+    uint256 constant GAMMA_NEG_Y_1 =
+        10685481643380945799692608326769918793248842567825873124661643766522511566027;
 
     // Groth16 delta point in G2 in powers of i
-    uint256 constant DELTA_NEG_X_0 = 17220218489531966389123765014206042250472886587372271298287857884613421903458;
-    uint256 constant DELTA_NEG_X_1 = 14470386200191635451083734293688353663320530189331692606027505192342131063606;
-    uint256 constant DELTA_NEG_Y_0 = 249835958416057937657369124782138597129793828997693278059346796413817511310;
-    uint256 constant DELTA_NEG_Y_1 = 18094254045222117580061947800403358159886540587730323476529053710742162001573;
+    uint256 constant DELTA_NEG_X_0 =
+        17220218489531966389123765014206042250472886587372271298287857884613421903458;
+    uint256 constant DELTA_NEG_X_1 =
+        14470386200191635451083734293688353663320530189331692606027505192342131063606;
+    uint256 constant DELTA_NEG_Y_0 =
+        249835958416057937657369124782138597129793828997693278059346796413817511310;
+    uint256 constant DELTA_NEG_Y_1 =
+        18094254045222117580061947800403358159886540587730323476529053710742162001573;
 
     // Constant and public input points
-    uint256 constant CONSTANT_X = 11953768251568857193273708165557972905717457689782869500776346259767863732152;
-    uint256 constant CONSTANT_Y = 13649671507047934875131816057557786958595462521164403518772735569698015717712;
-    uint256 constant PUB_0_X = 3037865058338468401680287148002468974167719491054672101844829814538172650363;
-    uint256 constant PUB_0_Y = 3703487383378547499635789315071922056360893634369825434737745045599658494301;
-    uint256 constant PUB_1_X = 13115434031104130463691295015179304261415426999834719184149693734255459768704;
-    uint256 constant PUB_1_Y = 15583566577159823169254430240314541646708396225929938108480529258730392886474;
+    uint256 constant CONSTANT_X =
+        11953768251568857193273708165557972905717457689782869500776346259767863732152;
+    uint256 constant CONSTANT_Y =
+        13649671507047934875131816057557786958595462521164403518772735569698015717712;
+    uint256 constant PUB_0_X =
+        3037865058338468401680287148002468974167719491054672101844829814538172650363;
+    uint256 constant PUB_0_Y =
+        3703487383378547499635789315071922056360893634369825434737745045599658494301;
+    uint256 constant PUB_1_X =
+        13115434031104130463691295015179304261415426999834719184149693734255459768704;
+    uint256 constant PUB_1_Y =
+        15583566577159823169254430240314541646708396225929938108480529258730392886474;
 
     /// Negation in Fp.
     /// @notice Returns a number x such that a + x = 0 in Fp.
@@ -118,7 +144,7 @@ contract PicoVmVerifier {
             // Exponentiation failed.
             // Should not happen.
             revert ProofInvalid();
-        } 
+        }
     }
 
     /// Invertsion in Fp.
@@ -174,7 +200,11 @@ contract PicoVmVerifier {
     /// @param hint A hint which of two possible signs to pick in the equation.
     /// @return x0 The real part of the square root.
     /// @return x1 The imaginary part of the square root.
-    function sqrt_Fp2(uint256 a0, uint256 a1, bool hint) internal view returns (uint256 x0, uint256 x1) {
+    function sqrt_Fp2(
+        uint256 a0,
+        uint256 a1,
+        bool hint
+    ) internal view returns (uint256 x0, uint256 x1) {
         // If this square root reverts there is no solution in Fp2.
         uint256 d = sqrt_Fp(addmod(mulmod(a0, a0, P), mulmod(a1, a1, P), P));
         if (hint) {
@@ -186,8 +216,10 @@ contract PicoVmVerifier {
 
         // Check result to make sure we found a root.
         // Note: this also fails if a0 or a1 is not reduced.
-        if (a0 != addmod(mulmod(x0, x0, P), negate(mulmod(x1, x1, P)), P)
-        ||  a1 != mulmod(2, mulmod(x0, x1, P), P)) {
+        if (
+            a0 != addmod(mulmod(x0, x0, P), negate(mulmod(x1, x1, P)), P) ||
+            a1 != mulmod(2, mulmod(x0, x1, P), P)
+        ) {
             revert ProofInvalid();
         }
     }
@@ -199,7 +231,10 @@ contract PicoVmVerifier {
     /// @param x The X coordinate in Fp.
     /// @param y The Y coordinate in Fp.
     /// @return c The compresed point (x with one signal bit).
-    function compress_g1(uint256 x, uint256 y) internal view returns (uint256 c) {
+    function compress_g1(
+        uint256 x,
+        uint256 y
+    ) internal view returns (uint256 c) {
         if (x >= P || y >= P) {
             // G1 point not in field.
             revert ProofInvalid();
@@ -208,7 +243,7 @@ contract PicoVmVerifier {
             // Point at infinity
             return 0;
         }
-        
+
         // Note: sqrt_Fp reverts if there is no solution, i.e. the x coordinate is invalid.
         uint256 y_pos = sqrt_Fp(addmod(mulmod(mulmod(x, x, P), x, P), 3, P));
         if (y == y_pos) {
@@ -227,7 +262,9 @@ contract PicoVmVerifier {
     /// @param c The compresed point (x with one signal bit).
     /// @return x The X coordinate in Fp.
     /// @return y The Y coordinate in Fp.
-    function decompress_g1(uint256 c) internal view returns (uint256 x, uint256 y) {
+    function decompress_g1(
+        uint256 c
+    ) internal view returns (uint256 x, uint256 y) {
         // Note that X = 0 is not on the curve since 0³ + 3 = 3 is not a square.
         // so we can use it to represent the point at infinity.
         if (c == 0) {
@@ -254,7 +291,7 @@ contract PicoVmVerifier {
     /// @notice Reverts with InvalidProof if the coefficients are not reduced
     /// or if the point is not on the curve.
     /// @notice The G2 curve is defined over the complex extension Fp[i]/(i^2 + 1)
-    /// with coordinates (x0 + x1 ⋅ i, y0 + y1 ⋅ i). 
+    /// with coordinates (x0 + x1 ⋅ i, y0 + y1 ⋅ i).
     /// @notice The point at infinity is encoded as (0,0,0,0) and compressed to (0,0).
     /// @param x0 The real part of the X coordinate.
     /// @param x1 The imaginary poart of the X coordinate.
@@ -262,8 +299,12 @@ contract PicoVmVerifier {
     /// @param y1 The imaginary part of the Y coordinate.
     /// @return c0 The first half of the compresed point (x0 with two signal bits).
     /// @return c1 The second half of the compressed point (x1 unmodified).
-    function compress_g2(uint256 x0, uint256 x1, uint256 y0, uint256 y1)
-    internal view returns (uint256 c0, uint256 c1) {
+    function compress_g2(
+        uint256 x0,
+        uint256 x1,
+        uint256 y0,
+        uint256 y1
+    ) internal view returns (uint256 c0, uint256 c1) {
         if (x0 >= P || x1 >= P || y0 >= P || y1 >= P) {
             // G2 point not in field.
             revert ProofInvalid();
@@ -278,28 +319,38 @@ contract PicoVmVerifier {
         uint256 y0_pos;
         uint256 y1_pos;
         {
-            uint256 n3ab = mulmod(mulmod(x0, x1, P), P-3, P);
+            uint256 n3ab = mulmod(mulmod(x0, x1, P), P - 3, P);
             uint256 a_3 = mulmod(mulmod(x0, x0, P), x0, P);
             uint256 b_3 = mulmod(mulmod(x1, x1, P), x1, P);
-            y0_pos = addmod(FRACTION_27_82_FP, addmod(a_3, mulmod(n3ab, x1, P), P), P);
-            y1_pos = negate(addmod(FRACTION_3_82_FP,  addmod(b_3, mulmod(n3ab, x0, P), P), P));
+            y0_pos = addmod(
+                FRACTION_27_82_FP,
+                addmod(a_3, mulmod(n3ab, x1, P), P),
+                P
+            );
+            y1_pos = negate(
+                addmod(FRACTION_3_82_FP, addmod(b_3, mulmod(n3ab, x0, P), P), P)
+            );
         }
 
         // Determine hint bit
         // If this sqrt fails the x coordinate is not on the curve.
         bool hint;
         {
-            uint256 d = sqrt_Fp(addmod(mulmod(y0_pos, y0_pos, P), mulmod(y1_pos, y1_pos, P), P));
-            hint = !isSquare_Fp(mulmod(addmod(y0_pos, d, P), FRACTION_1_2_FP, P));
+            uint256 d = sqrt_Fp(
+                addmod(mulmod(y0_pos, y0_pos, P), mulmod(y1_pos, y1_pos, P), P)
+            );
+            hint = !isSquare_Fp(
+                mulmod(addmod(y0_pos, d, P), FRACTION_1_2_FP, P)
+            );
         }
 
         // Recover y
         (y0_pos, y1_pos) = sqrt_Fp2(y0_pos, y1_pos, hint);
         if (y0 == y0_pos && y1 == y1_pos) {
-            c0 = (x0 << 2) | (hint ? 2  : 0) | 0;
+            c0 = (x0 << 2) | (hint ? 2 : 0) | 0;
             c1 = x1;
         } else if (y0 == negate(y0_pos) && y1 == negate(y1_pos)) {
-            c0 = (x0 << 2) | (hint ? 2  : 0) | 1;
+            c0 = (x0 << 2) | (hint ? 2 : 0) | 1;
             c1 = x1;
         } else {
             // G1 point not on curve.
@@ -310,7 +361,7 @@ contract PicoVmVerifier {
     /// Decompress a G2 point.
     /// @notice Reverts with InvalidProof if the input does not represent a valid point.
     /// @notice The G2 curve is defined over the complex extension Fp[i]/(i^2 + 1)
-    /// with coordinates (x0 + x1 ⋅ i, y0 + y1 ⋅ i). 
+    /// with coordinates (x0 + x1 ⋅ i, y0 + y1 ⋅ i).
     /// @notice The point at infinity is encoded as (0,0,0,0) and compressed to (0,0).
     /// @param c0 The first half of the compresed point (x0 with two signal bits).
     /// @param c1 The second half of the compressed point (x1 unmodified).
@@ -318,8 +369,10 @@ contract PicoVmVerifier {
     /// @return x1 The imaginary poart of the X coordinate.
     /// @return y0 The real part of the Y coordinate.
     /// @return y1 The imaginary part of the Y coordinate.
-    function decompress_g2(uint256 c0, uint256 c1)
-    internal view returns (uint256 x0, uint256 x1, uint256 y0, uint256 y1) {
+    function decompress_g2(
+        uint256 c0,
+        uint256 c1
+    ) internal view returns (uint256 x0, uint256 x1, uint256 y0, uint256 y1) {
         // Note that X = (0, 0) is not on the curve since 0³ + 3/(9 + i) is not a square.
         // so we can use it to represent the point at infinity.
         if (c0 == 0 && c1 == 0) {
@@ -335,12 +388,14 @@ contract PicoVmVerifier {
             revert ProofInvalid();
         }
 
-        uint256 n3ab = mulmod(mulmod(x0, x1, P), P-3, P);
+        uint256 n3ab = mulmod(mulmod(x0, x1, P), P - 3, P);
         uint256 a_3 = mulmod(mulmod(x0, x0, P), x0, P);
         uint256 b_3 = mulmod(mulmod(x1, x1, P), x1, P);
 
         y0 = addmod(FRACTION_27_82_FP, addmod(a_3, mulmod(n3ab, x1, P), P), P);
-        y1 = negate(addmod(FRACTION_3_82_FP,  addmod(b_3, mulmod(n3ab, x0, P), P), P));
+        y1 = negate(
+            addmod(FRACTION_3_82_FP, addmod(b_3, mulmod(n3ab, x0, P), P), P)
+        );
 
         // Note: sqrt_Fp2 reverts if there is no solution, i.e. the point is not on the curve.
         // Note: (X³ + 3/(9 + i)) is irreducible in Fp2, so y can not be zero.
@@ -359,8 +414,9 @@ contract PicoVmVerifier {
     /// @param input The public inputs. These are elements of the scalar field Fr.
     /// @return x The X coordinate of the resulting G1 point.
     /// @return y The Y coordinate of the resulting G1 point.
-    function publicInputMSM(uint256[2] calldata input)
-    internal view returns (uint256 x, uint256 y) {
+    function publicInputMSM(
+        uint256[2] calldata input
+    ) internal view returns (uint256 x, uint256 y) {
         // Note: The ECMUL precompile does not reject unreduced values, so we check this.
         // Note: Unrolling this loop does not cost much extra in code-size, the bulk of the
         //       code-size is in the PUB_ constants.
@@ -377,18 +433,30 @@ contract PicoVmVerifier {
             mstore(add(f, 0x20), CONSTANT_Y)
             mstore(g, PUB_0_X)
             mstore(add(g, 0x20), PUB_0_Y)
-            s :=  calldataload(input)
+            s := calldataload(input)
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
-            success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
-            success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
+            success := and(
+                success,
+                staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40)
+            )
+            success := and(
+                success,
+                staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40)
+            )
             mstore(g, PUB_1_X)
             mstore(add(g, 0x20), PUB_1_Y)
-            s :=  calldataload(add(input, 32))
+            s := calldataload(add(input, 32))
             mstore(add(g, 0x40), s)
             success := and(success, lt(s, R))
-            success := and(success, staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40))
-            success := and(success, staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40))
+            success := and(
+                success,
+                staticcall(gas(), PRECOMPILE_MUL, g, 0x60, g, 0x40)
+            )
+            success := and(
+                success,
+                staticcall(gas(), PRECOMPILE_ADD, f, 0x80, f, 0x40)
+            )
             x := mload(f)
             y := mload(add(f, 0x20))
         }
@@ -406,10 +474,16 @@ contract PicoVmVerifier {
     /// verifyProof. I.e. Groth16 points (A, B, C) encoded as in EIP-197.
     /// @return compressed The compressed proof. Elements are in the same order as for
     /// verifyCompressedProof. I.e. points (A, B, C) in compressed format.
-    function compressProof(uint256[8] calldata proof)
-    public view returns (uint256[4] memory compressed) {
+    function compressProof(
+        uint256[8] calldata proof
+    ) public view returns (uint256[4] memory compressed) {
         compressed[0] = compress_g1(proof[0], proof[1]);
-        (compressed[2], compressed[1]) = compress_g2(proof[3], proof[2], proof[5], proof[4]);
+        (compressed[2], compressed[1]) = compress_g2(
+            proof[3],
+            proof[2],
+            proof[5],
+            proof[4]
+        );
         compressed[3] = compress_g1(proof[6], proof[7]);
     }
 
@@ -428,7 +502,9 @@ contract PicoVmVerifier {
     ) public view {
         (uint256 Ax, uint256 Ay) = decompress_g1(compressedProof[0]);
         (uint256 Bx0, uint256 Bx1, uint256 By0, uint256 By1) = decompress_g2(
-                compressedProof[2], compressedProof[1]);
+            compressedProof[2],
+            compressedProof[1]
+        );
         (uint256 Cx, uint256 Cy) = decompress_g1(compressedProof[3]);
         (uint256 Lx, uint256 Ly) = publicInputMSM(input);
 
@@ -437,17 +513,17 @@ contract PicoVmVerifier {
         // Note: The pairing precompile rejects unreduced values, so we won't check that here.
         uint256[24] memory pairings;
         // e(A, B)
-        pairings[ 0] = Ax;
-        pairings[ 1] = Ay;
-        pairings[ 2] = Bx1;
-        pairings[ 3] = Bx0;
-        pairings[ 4] = By1;
-        pairings[ 5] = By0;
+        pairings[0] = Ax;
+        pairings[1] = Ay;
+        pairings[2] = Bx1;
+        pairings[3] = Bx0;
+        pairings[4] = By1;
+        pairings[5] = By0;
         // e(C, -δ)
-        pairings[ 6] = Cx;
-        pairings[ 7] = Cy;
-        pairings[ 8] = DELTA_NEG_X_1;
-        pairings[ 9] = DELTA_NEG_X_0;
+        pairings[6] = Cx;
+        pairings[7] = Cy;
+        pairings[8] = DELTA_NEG_X_1;
+        pairings[9] = DELTA_NEG_X_0;
         pairings[10] = DELTA_NEG_Y_1;
         pairings[11] = DELTA_NEG_Y_0;
         // e(α, -β)
@@ -469,7 +545,14 @@ contract PicoVmVerifier {
         bool success;
         uint256[1] memory output;
         assembly ("memory-safe") {
-            success := staticcall(gas(), PRECOMPILE_VERIFY, pairings, 0x300, output, 0x20)
+            success := staticcall(
+                gas(),
+                PRECOMPILE_VERIFY,
+                pairings,
+                0x300,
+                output,
+                0x20
+            )
         }
         if (!success || output[0] != 1) {
             // Either proof or verification key invalid.
@@ -495,7 +578,7 @@ contract PicoVmVerifier {
 
         // Note: The precompile expects the F2 coefficients in big-endian order.
         // Note: The pairing precompile rejects unreduced values, so we won't check that here.
-        
+
         bool success;
         assembly ("memory-safe") {
             let f := mload(0x40) // Free memory pointer.
