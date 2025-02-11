@@ -18,7 +18,7 @@ contract FibonacciTest is Test {
     function setUp() public {
         // Read and parse the input data from the JSON file
         // The JSON file is produced by running the command: `cargo pico prove --evm --output`
-        string memory filePath = "./test_data/input.json";
+        string memory filePath = "./test_data/inputs.json";
         string memory jsonContent = vm.readFile(filePath);
 
         fibonacciKey = abi.decode(

@@ -1,5 +1,5 @@
 use fibonacci_lib::load_elf;
-use pico_sdk::{init_logger, vk_client::BabyBearProveVKClient};
+use pico_sdk::{init_logger, vk_client::KoalaBearProveVKClient};
 use std::env;
 
 fn main() {
@@ -10,7 +10,7 @@ fn main() {
     let elf = load_elf("../elf/riscv32im-pico-zkvm-elf");
 
     // Initialize the prover client
-    let client = BabyBearProveVKClient::new(&elf);
+    let client = KoalaBearProveVKClient::new(&elf);
     let stdin_builder = client.get_stdin_builder(); // Shared instance
 
     // Set up input
@@ -25,6 +25,6 @@ fn main() {
     // The first parameter `need_setup = true` ensures the Groth16 verifier is set up,
     // but this setup is required only once.
     client
-        .prove_evm(true, output_path.clone())
+        .prove_evm(true, output_path.clone(), "kb")
         .expect("Failed to generate proof");
 }
