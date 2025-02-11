@@ -1,14 +1,11 @@
+use serde::{Deserialize, Serialize};
 use std::fs;
 
-use alloy_sol_types::sol;
-
-sol! {
-    /// The public values encoded as a struct that can be easily deserialized inside Solidity.
-    struct PublicValuesStruct {
-        uint32 n;
-        uint32 a;
-        uint32 b;
-    }
+#[derive(Serialize, Deserialize)]
+pub struct FibonacciData {
+    pub a: u32,
+    pub b: u32,
+    pub n: u32,
 }
 
 /// Computes the Fibonacci sequence starting from `a` and `b` up to the `n`-th iteration.

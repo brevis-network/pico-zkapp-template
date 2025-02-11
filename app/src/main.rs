@@ -1,9 +1,8 @@
 #![no_main]
 
 pico_sdk::entrypoint!(main);
-use alloy_sol_types::SolValue;
-use fibonacci_lib::{PublicValuesStruct, fibonacci};
-use pico_sdk::io::{commit_bytes, read_as};
+use fibonacci_lib::{FibonacciData, fibonacci};
+use pico_sdk::io::{commit, read_as};
 
 pub fn main() {
     // Read inputs `n` from the environment
@@ -15,13 +14,13 @@ pub fn main() {
     // Compute Fibonacci values starting from `a` and `b`
     let (a_result, b_result) = fibonacci(a, b, n);
 
-    // Encode the result into ABI format
-    let result = PublicValuesStruct {
+    // Commit the assembled Fibonacci data as the public values in the Pico proof.
+    // This allows the values to be verified by others.
+    let result = FibonacciData {
         n,
         a: a_result,
         b: b_result,
     };
-    let encoded_bytes = result.abi_encode();
 
-    commit_bytes(&encoded_bytes);
+    commit(&result);
 }

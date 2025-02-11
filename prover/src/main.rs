@@ -1,5 +1,4 @@
-use alloy_sol_types::SolType;
-use fibonacci_lib::{PublicValuesStruct, fibonacci, load_elf};
+use fibonacci_lib::{FibonacciData, fibonacci, load_elf};
 use pico_sdk::{client::DefaultProverClient, init_logger};
 
 fn main() {
@@ -22,14 +21,17 @@ fn main() {
 
     // Decodes public values from the proof's public value stream.
     let public_buffer = proof.pv_stream.unwrap();
-    let public_values = PublicValuesStruct::abi_decode(&public_buffer, true).unwrap();
+
+    // Deserialize public_buffer into FibonacciData
+    let public_values: FibonacciData =
+        bincode::deserialize(&public_buffer).expect("Failed to deserialize");
 
     // Verify the public values
     verify_public_values(n, &public_values);
 }
 
 /// Verifies that the computed Fibonacci values match the public values.
-fn verify_public_values(n: u32, public_values: &PublicValuesStruct) {
+fn verify_public_values(n: u32, public_values: &FibonacciData) {
     println!(
         "Public value n: {:?}, a: {:?}, b: {:?}",
         public_values.n, public_values.a, public_values.b

@@ -7,5 +7,5 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-alloy-sol-types = "0.8.19"
 pico-sdk = { git = "https://github.com/brevis-network/brevis-vm.git" }
+serde = { version = "1.0.205", features = ["derive"] }
