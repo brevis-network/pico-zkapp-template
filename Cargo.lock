@@ -2034,7 +2034,7 @@ dependencies = [
 [[package]]
 name = "pico-derive"
 version = "0.1.0"
-source = "git+https://github.com/brevis-network/pico#833980ef0ba3c6252e220f5d6d40b929faa96d09"
+source = "git+https://github.com/brevis-network/pico#51bdd803270f29ea624b7a2d8af31cffff579ab4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2044,7 +2044,7 @@ dependencies = [
 [[package]]
 name = "pico-patch-libs"
 version = "1.0.0"
-source = "git+https://github.com/brevis-network/pico#833980ef0ba3c6252e220f5d6d40b929faa96d09"
+source = "git+https://github.com/brevis-network/pico#51bdd803270f29ea624b7a2d8af31cffff579ab4"
 dependencies = [
  "bincode",
  "serde",
@@ -2053,7 +2053,7 @@ dependencies = [
 [[package]]
 name = "pico-sdk"
 version = "1.0.0"
-source = "git+https://github.com/brevis-network/pico#833980ef0ba3c6252e220f5d6d40b929faa96d09"
+source = "git+https://github.com/brevis-network/pico#51bdd803270f29ea624b7a2d8af31cffff579ab4"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2079,7 +2079,7 @@ dependencies = [
 [[package]]
 name = "pico-vm"
 version = "1.0.0"
-source = "git+https://github.com/brevis-network/pico#833980ef0ba3c6252e220f5d6d40b929faa96d09"
+source = "git+https://github.com/brevis-network/pico#51bdd803270f29ea624b7a2d8af31cffff579ab4"
 dependencies = [
  "anyhow",
  "arrayref",
