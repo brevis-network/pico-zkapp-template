@@ -1,6 +1,6 @@
 use alloy_sol_types::SolType;
 use fibonacci_lib::{PublicValuesStruct, fibonacci, load_elf};
-use pico_sdk::{client::KoalaBearProverClient, init_logger};
+use pico_sdk::{client::DefaultProverClient, init_logger};
 
 fn main() {
     // Initialize logger
@@ -10,10 +10,10 @@ fn main() {
     let elf = load_elf("../elf/riscv32im-pico-zkvm-elf");
 
     // Initialize the prover client
-    let client = KoalaBearProverClient::new(&elf);
+    let client = DefaultProverClient::new(&elf);
     let stdin_builder = client.get_stdin_builder();
 
-    // Set up input and generate proof
+    // Set up input
     let n = 100u32;
     stdin_builder.borrow_mut().write(&n);
 
