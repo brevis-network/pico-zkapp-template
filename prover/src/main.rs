@@ -26,5 +26,5 @@ fn main() {
     // but this setup is required only once.
     client
         .prove_evm(true, output_path.clone(), "kb")
-        .expect("Failed to generate evm proof!");
+        .expect("Failed to generate evm proof");
 }
