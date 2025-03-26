@@ -1,5 +1,5 @@
 use fibonacci_lib::load_elf;
-use pico_sdk::{init_logger, vk_client::KoalaBearProveVKClient};
+use pico_sdk::{client::DefaultProverClient, init_logger};
 use std::env;
 
 fn main() {
@@ -10,7 +10,7 @@ fn main() {
     let elf = load_elf("../elf/riscv32im-pico-zkvm-elf");
 
     // Initialize the prover client
-    let client = KoalaBearProveVKClient::new(&elf);
+    let client = DefaultProverClient::new(&elf);
     let stdin_builder = client.get_stdin_builder(); // Shared instance
 
     // Set up input
@@ -26,5 +26,5 @@ fn main() {
     // but this setup is required only once.
     client
         .prove_evm(true, output_path.clone(), "kb")
-        .expect("Failed to generate proof");
+        .expect("Failed to generate evm proof!");
 }
