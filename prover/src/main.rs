@@ -11,11 +11,12 @@ fn main() {
 
     // Initialize the prover client
     let client = DefaultProverClient::new(&elf);
-    let stdin_builder = client.get_stdin_builder(); // Shared instance
+    // Initialize new stdin
+    let mut stdin_builder = client.new_stdin_builder();
 
     // Set up input
     let n = 10u32;
-    stdin_builder.borrow_mut().write(&n);
+    stdin_builder.write(&n);
 
     // Set up output path
     let current_dir = env::current_dir().expect("Failed to get current directory");
@@ -25,6 +26,6 @@ fn main() {
     // The first parameter `need_setup = true` ensures the Groth16 verifier is set up,
     // but this setup is required only once.
     client
-        .prove_evm(true, output_path.clone(), "kb")
+        .prove_evm(stdin_builder, true, output_path.clone(), "kb")
         .expect("Failed to generate evm proof");
 }
