@@ -1,4 +1,5 @@
-use fibonacci_lib::{FibonacciData, fibonacci, load_elf};
+use std::fs;
+use fibonacci_lib::load_elf;
 use pico_sdk::{client::DefaultProverClient, init_logger};
 
 fn main() {
@@ -10,6 +11,12 @@ fn main() {
 
     // Initialize the prover client
     let client = DefaultProverClient::new(&elf);
+
+    // Write riscv_vk to disk
+    let riscv_vk = client.riscv_vk();
+    let riscv_vk_bytes = bincode::serialize(&riscv_vk).unwrap();
+    fs::write("fibo_riscv_vk.bin", riscv_vk_bytes).unwrap();
+
     // Initialize new stdin
     let mut stdin_builder = client.new_stdin_builder();
 
@@ -18,32 +25,11 @@ fn main() {
     stdin_builder.write(&n);
 
     // Generate proof
-    let proof = client
-        .prove_fast(stdin_builder)
+    let (_, proof) = client
+        .prove_combine(stdin_builder)
         .expect("Failed to generate proof");
 
-    // Decodes public values from the proof's public value stream.
-    let public_buffer = proof.pv_stream.unwrap();
-
-    // Deserialize public_buffer into FibonacciData
-    let public_values: FibonacciData =
-        bincode::deserialize(&public_buffer).expect("Failed to deserialize");
-
-    // Verify the public values
-    verify_public_values(n, &public_values);
-}
-
-/// Verifies that the computed Fibonacci values match the public values.
-fn verify_public_values(n: u32, public_values: &FibonacciData) {
-    println!(
-        "Public value n: {:?}, a: {:?}, b: {:?}",
-        public_values.n, public_values.a, public_values.b
-    );
-
-    // Compute Fibonacci values locally
-    let (result_a, result_b) = fibonacci(0, 1, n);
-
-    // Assert that the computed values match the public values
-    assert_eq!(result_a, public_values.a, "Mismatch in value 'a'");
-    assert_eq!(result_b, public_values.b, "Mismatch in value 'b'");
+    // Write proof to disk
+    let proof_bytes = bincode::serialize(&proof).unwrap();
+    std::fs::write("fibo_proof.bin", proof_bytes).unwrap();
 }
