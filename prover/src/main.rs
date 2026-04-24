@@ -23,21 +23,23 @@ fn main() {
     // `generate_crates` beforehand when --aot is used; see README.
     let elf = load_elf("../app/elf/riscv64im-pico-zkvm-elf");
 
-    // Register the AOT factory BEFORE constructing the prover client. The
-    // client's DefaultProverClient::new calls EmulatorOpts::default(), which
-    // flips snapshot_main to Aot only when the factory is already registered
-    // (vm/src/emulator/opts.rs:74).
     #[cfg(feature = "aot")]
-    if aot {
+    let client = if aot {
+        // Register the AOT factory, then construct the client with
+        // SnapshotMainMode::Aot explicitly selected. The SDK no longer
+        // auto-flips the default based on registration state — callers opt
+        // in through EmulatorOpts so the AOT path is never taken by accident.
         aot_glue::register_with_vm();
-        let opts = pico_vm::emulator::opts::EmulatorOpts::default();
-        eprintln!(
-            "aot enabled: default_snapshot_main_mode = {:?}",
-            opts.snapshot_main
-        );
-    }
+        let opts = pico_vm::emulator::opts::EmulatorOpts::default()
+            .with_snapshot_main(pico_vm::emulator::opts::SnapshotMainMode::Aot);
+        DefaultProverClient::new_with_opts(&elf, opts)
+    } else {
+        DefaultProverClient::new(&elf)
+    };
 
+    #[cfg(not(feature = "aot"))]
     let client = DefaultProverClient::new(&elf);
+
     let mut stdin_builder = client.new_stdin_builder();
 
     let n = 100u32;

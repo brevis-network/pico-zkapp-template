@@ -13,7 +13,7 @@ use pico_aot_dispatch::AotEmulatorCore;
 use pico_vm::{
     compiler::riscv::program::Program,
     emulator::{
-        aot::{is_aot_factory_registered, register_aot_factory, AotSnapshotEmulator},
+        aot::{register_aot_factory, AotSnapshotEmulator},
         opts::EmulatorOpts,
         riscv::{
             chunk_split::ChunkSplitConfig, riscv_emulator::EmulationError,
@@ -82,8 +82,8 @@ impl AotSnapshotEmulator for VmAotAdapter {
         &mut self,
     ) -> Result<(RiscvEmulationState, EmulationReport), EmulationError> {
         next_state_batch_impl(&mut self.core, self.opts).map_err(|s| {
-            eprintln!("AOT adapter error: {s}");
-            EmulationError::Unimplemented()
+            tracing::error!(error = %s, "AOT adapter error");
+            EmulationError::Aot(s)
         })
     }
 
@@ -108,7 +108,5 @@ fn aot_factory(
 }
 
 pub fn register_with_vm() {
-    if !is_aot_factory_registered() {
-        register_aot_factory(aot_factory);
-    }
+    register_aot_factory(aot_factory);
 }
