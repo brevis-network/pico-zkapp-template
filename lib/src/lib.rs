@@ -3,14 +3,14 @@ use std::fs;
 
 #[derive(Serialize, Deserialize)]
 pub struct FibonacciData {
-    pub a: u32,
-    pub b: u32,
-    pub n: u32,
+    pub a: u64,
+    pub b: u64,
+    pub n: u64,
 }
 
 /// Computes the Fibonacci sequence starting from `a` and `b` up to the `n`-th iteration.
 /// Returns the last two values in the sequence: (a, b).
-pub fn fibonacci(mut a: u32, mut b: u32, n: u32) -> (u32, u32) {
+pub fn fibonacci(mut a: u64, mut b: u64, n: u64) -> (u64, u64) {
     for _ in 0..n {
         let next = a.wrapping_add(b);
         a = b;

@@ -42,7 +42,7 @@ fn main() {
 
     let mut stdin_builder = client.new_stdin_builder();
 
-    let n = 100u32;
+    let n = 100u64;
     stdin_builder.write(&n);
 
     let proof = client
@@ -57,7 +57,7 @@ fn main() {
 }
 
 /// Verifies that the computed Fibonacci values match the public values.
-fn verify_public_values(n: u32, public_values: &FibonacciData) {
+fn verify_public_values(n: u64, public_values: &FibonacciData) {
     println!(
         "Public value n: {:?}, a: {:?}, b: {:?}",
         public_values.n, public_values.a, public_values.b
