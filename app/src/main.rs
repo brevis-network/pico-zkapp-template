@@ -1,26 +1,24 @@
 #![no_main]
-
 pico_sdk::entrypoint!(main);
-use fibonacci_lib::{FibonacciData, fibonacci};
-use pico_sdk::io::{commit, read_as};
+
+use rsp_client_executor::{
+    executor::{EthClientExecutor, DESERIALZE_INPUTS},
+    io::{CommittedHeader, EthClientExecutorInput},
+    utils::profile_report,
+};
+use std::sync::Arc;
 
 pub fn main() {
-    // Read inputs `n` from the environment
-    let n: u64 = read_as();
+    let input = profile_report!(DESERIALZE_INPUTS, {
+        let input = pico_sdk::io::read_vec();
+        bincode::deserialize::<EthClientExecutorInput>(&input).unwrap()
+    });
 
-    let a: u64 = 0;
-    let b: u64 = 1;
+    let executor = EthClientExecutor::eth(
+        Arc::new((&input.genesis).try_into().unwrap()),
+        input.custom_beneficiary,
+    );
+    let header = executor.execute(input).expect("failed to execute client");
 
-    // Compute Fibonacci values starting from `a` and `b`
-    let (a_result, b_result) = fibonacci(a, b, n);
-
-    // Commit the assembled Fibonacci data as the public values in the Pico proof.
-    // This allows the values to be verified by others.
-    let result = FibonacciData {
-        n,
-        a: a_result,
-        b: b_result,
-    };
-
-    commit(&result);
+    pico_sdk::io::commit::<CommittedHeader>(&header.into());
 }
