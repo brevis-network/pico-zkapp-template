@@ -1,0 +1,13 @@
+# Local dev override. Copy to .cargo/config.toml and adjust the paths to
+# match where you have the pico source tree checked out. Gitignored; never
+# commit the actual config.toml.
+#
+# Needed when the template's git deps reference a tag (e.g. v2.0.0) that
+# has not yet been published to brevis-network/pico. With these patches
+# in place, Cargo resolves pico-sdk/pico-vm/pico-aot-runtime against your
+# local checkout instead of trying to fetch the unpublished tag.
+
+[patch."https://github.com/brevis-network/pico"]
+pico-sdk         = { path = "/absolute/path/to/pico/sdk/sdk" }
+pico-vm          = { path = "/absolute/path/to/pico/vm" }
+pico-aot-runtime = { path = "/absolute/path/to/pico/aot-runtime" }
