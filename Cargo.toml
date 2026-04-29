@@ -9,3 +9,6 @@ resolver = "2"
 [workspace.dependencies]
 pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v2.0.0" }
 serde = { version = "1.0.205", features = ["derive"] }
+
+[profile.release]
+codegen-units = 1
