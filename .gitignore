@@ -1,1 +1,15 @@
 /target
+
+# aot-generated/ is populated by `generate_crates` against the current
+# guest ELF; ship only the minimal bootstrap skeleton so Cargo can resolve
+# the optional `pico-aot-dispatch` path dep even before codegen has run.
+/aot-generated/*
+!/aot-generated/Cargo.toml
+!/aot-generated/src/
+/aot-generated/src/*
+!/aot-generated/src/lib.rs
+
+# Local dev overlay for patching pico deps to a local checkout when the
+# tag pinned in Cargo.toml is not yet published. Copy
+# .cargo/config.toml.example and edit the paths to match your machine.
+/.cargo/config.toml
