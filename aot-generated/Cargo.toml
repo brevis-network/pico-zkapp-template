@@ -1,0 +1,17 @@
+# Bootstrap stub. Overwritten by `generate_crates` whenever the guest ELF
+# changes. Exists so the prover crate's optional `pico-aot-dispatch` path
+# dep resolves even before AOT codegen has been run.
+[package]
+name = "pico-aot-dispatch"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pico-aot-runtime = { git = "https://github.com/brevis-network/pico", tag = "v2.0.0" }
+
+[features]
+bigint-rug = ["pico-aot-runtime/bigint-rug"]
+mmap-memory = ["pico-aot-runtime/mmap-memory"]
+
+[lib]
+path = "src/lib.rs"
