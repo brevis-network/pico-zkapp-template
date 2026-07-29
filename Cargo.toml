@@ -8,7 +8,7 @@ resolver = "2"
 
 [workspace.dependencies]
 alloy-sol-types = "0.8.19"
-pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v2.0.0" }
+pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v2.1.1" }
 
 [profile.release]
 codegen-units = 1
