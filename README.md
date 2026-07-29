@@ -57,7 +57,7 @@ VK_VERIFICATION=false cargo run --release
 Expected output:
 
 ```
-Public value n: 100, a: 3314859971, b: 2425370821
+Public value n: 100, a: 3736710778780434371, b: 1298777728820984005
 ```
 
 `VK_VERIFICATION=false` is needed while running stock shapes against a
@@ -101,8 +101,13 @@ VK_VERIFICATION=false cargo run --release --features aot -- --aot
 as a git dep in the generated chunk Cargo.tomls, so `aot-generated/` can
 live at the template root without a local pico checkout.
 
-Expected: the console prints
-`aot enabled: default_snapshot_main_mode = Aot`
+Expected: the console prints these two banners
+
+```
+========== [AOT-PIPELINE] RISCV prove via emulate_snapshot_pipeline (snapshot_main=Aot) ==========
+########## [AOT] snapshot-main = AotMetaEmulator (running AOT-compiled chunks) ##########
+```
+
 followed by the same `Public value n: 100, ...` line as the default path.
 
 ### Notes on AOT mode
