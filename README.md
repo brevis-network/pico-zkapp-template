@@ -4,14 +4,33 @@ Minimal Fibonacci-on-Pico example.
 
 ## Prerequisites
 
+Resolve the latest Pico release once — every command below uses `$PICO_TAG`:
+
+```
+export PICO_TAG=$(curl -fsSL -o /dev/null -w '%{url_effective}' \
+  https://github.com/brevis-network/pico/releases/latest | sed 's#.*/tag/##')
+echo "Using Pico $PICO_TAG"
+```
+
+This follows GitHub's own "latest release" pointer, so pre-releases are skipped.
+To pin a specific version instead, just set it yourself: `export PICO_TAG=v2.1.0`.
+
+Keep it as one variable rather than repeating the tag: the AOT codegen binary and
+the `pico-aot-runtime` that your generated chunks link against have to be the same
+version, and writing the tag out separately in each command makes it easy to bump
+only one of them.
+
 Install the Pico CLI:
 
 ```
-cargo +nightly-2025-08-04 install \
+cargo +nightly-2025-08-04 install --force \
   --git https://github.com/brevis-network/pico \
-  --tag v2.0.0 \
+  --tag "$PICO_TAG" \
   pico-cli
 ```
+
+The `nightly-2025-08-04` pin comes from Pico's own `rust-toolchain`. If you move to
+a much newer `PICO_TAG`, check that file at your tag in case it changed.
 
 Install the Pico guest toolchain (one time):
 
@@ -56,9 +75,9 @@ you re-run whenever `app/src/*.rs` changes.
 Install the AOT codegen binary:
 
 ```
-cargo +nightly-2025-08-04 install \
+cargo +nightly-2025-08-04 install --force \
   --git https://github.com/brevis-network/pico \
-  --tag v2.0.0 \
+  --tag "$PICO_TAG" \
   pico-aot-codegen
 ```
 
@@ -70,7 +89,7 @@ Rebuild the guest ELF, regenerate AOT chunks against it, then prove:
 cd app && cargo pico build
 cd ..
 
-PICO_AOT_RUNTIME_SPEC='git = "https://github.com/brevis-network/pico", tag = "v2.0.0"' \
+PICO_AOT_RUNTIME_SPEC="git = \"https://github.com/brevis-network/pico\", tag = \"$PICO_TAG\"" \
   generate_crates app/elf/riscv64im-pico-zkvm-elf ./aot-generated
 
 cd prover
