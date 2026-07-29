@@ -13,7 +13,7 @@ echo "Using Pico $PICO_TAG"
 ```
 
 This follows GitHub's own "latest release" pointer, so pre-releases are skipped.
-To pin a specific version instead, just set it yourself: `export PICO_TAG=v2.1.0`.
+To pin a specific version instead, just set it yourself: `export PICO_TAG=v2.1.1`.
 
 Keep it as one variable rather than repeating the tag: the AOT codegen binary and
 the `pico-aot-runtime` that your generated chunks link against have to be the same
@@ -83,7 +83,8 @@ cargo +nightly-2025-08-04 install --force \
 
 ### Every time the guest changes
 
-Rebuild the guest ELF, regenerate AOT chunks against it, then prove:
+Rebuild the guest ELF, regenerate AOT chunks against it, then prove. Run these
+from this repository's root:
 
 ```
 cd app && cargo pico build
@@ -112,13 +113,8 @@ followed by the same `Public value n: 100, ...` line as the default path.
   to the interpreter.
 - `aot-generated/` is gitignored apart from a minimal bootstrap stub.
   Never commit the regenerated contents.
-- At larger inputs the AOT path panics at
-  `vm/src/emulator/riscv/memory.rs:1013`. Tracked upstream. Does not fire
-  at `n = 100`.
 
 ## Layout notes
 
 - `app/elf/riscv64im-pico-zkvm-elf` is the default guest ELF, produced by
   `cargo pico build` inside `app/`.
-- `app/elf/riscv32im-pico-zkvm-elf` is the historical rv32 ELF, kept for
-  reference. The current Pico VM cannot execute it.

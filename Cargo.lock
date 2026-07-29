@@ -2452,38 +2452,7 @@ dependencies = [
 name = "pico-aot-dispatch"
 version = "0.1.0"
 dependencies = [
- "pico-aot-runtime 1.2.2",
-]
-
-[[package]]
-name = "pico-aot-runtime"
-version = "1.2.2"
-source = "git+https://github.com/brevis-network/pico?tag=v2.0.0#22b0aae6321c1f63c72aafd0b506b5f45b91ffb1"
-dependencies = [
- "ark-bls12-381",
- "ark-bn254",
- "ark-ff 0.5.0",
- "ark-secp256k1",
- "bls12_381",
- "curve25519-dalek",
- "halo2curves",
- "hashbrown 0.14.5",
- "hybrid-array",
- "k256",
- "libc",
- "log",
- "memmap2",
- "num",
- "num-bigint 0.4.8",
- "num-traits",
- "once_cell",
- "p256",
- "p3-field",
- "p3-koala-bear",
- "p3-symmetric",
- "pico-vm 1.2.2",
- "tiny-keccak",
- "typenum",
+ "pico-aot-runtime",
 ]
 
 [[package]]
@@ -2502,7 +2471,9 @@ dependencies = [
  "hashbrown 0.14.5",
  "hybrid-array",
  "k256",
+ "libc",
  "log",
+ "memmap2",
  "num",
  "num-bigint 0.4.8",
  "num-traits",
@@ -2511,20 +2482,10 @@ dependencies = [
  "p3-field",
  "p3-koala-bear",
  "p3-symmetric",
- "pico-vm 2.1.1",
+ "pico-vm",
  "secp256k1",
  "tiny-keccak",
  "typenum",
-]
-
-[[package]]
-name = "pico-derive"
-version = "1.2.2"
-source = "git+https://github.com/brevis-network/pico?tag=v2.0.0#22b0aae6321c1f63c72aafd0b506b5f45b91ffb1"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -2566,7 +2527,7 @@ dependencies = [
  "p3-koala-bear",
  "p3-mersenne-31",
  "pico-patch-libs",
- "pico-vm 2.1.1",
+ "pico-vm",
  "rand",
  "serde",
  "serde_json",
@@ -2575,8 +2536,8 @@ dependencies = [
 
 [[package]]
 name = "pico-vm"
-version = "1.2.2"
-source = "git+https://github.com/brevis-network/pico?tag=v2.0.0#22b0aae6321c1f63c72aafd0b506b5f45b91ffb1"
+version = "2.1.1"
+source = "git+https://github.com/brevis-network/pico?tag=v2.1.1#33fb15b2d40146433ce7a6da23cd8f56de7c482e"
 dependencies = [
  "anyhow",
  "arrayref",
@@ -2637,97 +2598,12 @@ dependencies = [
  "p3-uni-stark",
  "p3-util",
  "paste",
- "pico-derive 1.2.2",
+ "pico-derive",
  "rand",
  "rayon",
  "rayon-scan",
  "rrs-lib",
  "rug",
- "serde",
- "serde_json",
- "serde_with",
- "snowbridge-amcl",
- "static_assertions",
- "strum",
- "strum_macros",
- "sysinfo",
- "thiserror 1.0.69",
- "tiny-keccak",
- "tracing",
- "tracing-forest",
- "tracing-subscriber",
- "typenum",
- "vec_map",
- "zkhash",
-]
-
-[[package]]
-name = "pico-vm"
-version = "2.1.1"
-source = "git+https://github.com/brevis-network/pico?tag=v2.1.1#33fb15b2d40146433ce7a6da23cd8f56de7c482e"
-dependencies = [
- "anyhow",
- "arrayref",
- "backtrace",
- "bincode",
- "bytemuck",
- "cfg-if",
- "clap",
- "core_affinity",
- "cpu-time",
- "crossbeam",
- "csv",
- "curve25519-dalek",
- "dashmap",
- "dashu",
- "derive_more 2.1.1",
- "elf",
- "elliptic-curve",
- "eyre",
- "ff 0.13.1",
- "halo2curves",
- "hashbrown 0.14.5",
- "hex",
- "hybrid-array",
- "itertools 0.13.0",
- "k256",
- "lazy_static",
- "log",
- "num",
- "num-bigint 0.4.8",
- "num-traits",
- "num_cpus",
- "once_cell",
- "p256",
- "p3-air",
- "p3-baby-bear",
- "p3-blake3",
- "p3-bn254-fr",
- "p3-challenger",
- "p3-circle",
- "p3-commit",
- "p3-dft",
- "p3-field",
- "p3-fri",
- "p3-goldilocks",
- "p3-keccak",
- "p3-keccak-air",
- "p3-koala-bear",
- "p3-matrix",
- "p3-maybe-rayon",
- "p3-mds",
- "p3-merkle-tree",
- "p3-mersenne-31",
- "p3-poseidon2",
- "p3-symmetric",
- "p3-uni-stark",
- "p3-util",
- "paste",
- "pico-derive 2.1.1",
- "rand",
- "rayon",
- "rayon-scan",
- "rrs-lib",
  "serde",
  "serde_json",
  "serde_with",
@@ -2826,9 +2702,9 @@ dependencies = [
  "bincode",
  "fibonacci-lib",
  "pico-aot-dispatch",
- "pico-aot-runtime 2.1.1",
+ "pico-aot-runtime",
  "pico-sdk",
- "pico-vm 2.1.1",
+ "pico-vm",
  "serde",
  "tracing",
 ]
