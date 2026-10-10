@@ -1,58 +1,153 @@
-use fibonacci_lib::load_elf;
-use pico_sdk::{client::DefaultProverClient, init_logger};
-use std::env;
+//! Run the fibonacci guest through the host prover: emulate it, prove it, and verify the proof in
+//! another process.
+//!
+//! ```text
+//! (cd app && cargo pico build)
+//! cargo run --release -p prover -- execute 100
+//! cargo run --release -p prover -- prove fib.pico 100
+//! cargo run --release -p prover -- verify fib.pico
+//! ```
+//!
+//! The guest commits an ABI-encoded `PublicValuesStruct`, the bytes a Solidity verifier decodes, and
+//! every command decodes them the same way. Only `prove` and `verify` read them from a verified
+//! proof; what `execute` prints is not proved.
+//!
+//! With the `aot` feature, `execute` and `prove` emulate with the guest's AOT-compiled code, which
+//! `cargo pico aot` generates into `aot-generated/`. Only emulation changes: the circuits and the
+//! program id are the interpreter's, so `verify` needs no AOT code.
+//!
+//! This runs in dev mode: no whitelist, natural trace heights. The same ELF has a different program
+//! id under `verify_keys(true)`, and that is the id a contract pins.
+//!
+//! The file holds the RISC-V proof because that is the phase a process that proved nothing can
+//! verify from the ELF alone. The combine root that `Prover::prove` returns verifies outside the
+//! process that produced it only against the whitelist. The price is the weaker statement: a
+//! RISC-V proof binds the output to a set of separately proved chunks, not to one complete
+//! execution (`Proof::binds_complete_execution`).
 
-#[cfg(feature = "aot")]
-mod aot_glue;
+use std::{error::Error, process::ExitCode};
 
-fn main() {
-    init_logger();
+use alloy_sol_types::SolType;
+use fibonacci_lib::{PublicValuesStruct, fibonacci};
+use pico_prover::{Phase, Proof, ProofArtifact, Prover, ProverBuilder, Stdin};
 
-    let aot = std::env::args().any(|a| a == "--aot");
+/// Where `cargo pico build` writes the guest.
+const ELF_PATH: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../app/elf/riscv64im-pico-zkvm-elf"
+);
 
-    #[cfg(not(feature = "aot"))]
-    if aot {
-        eprintln!(
-            "--aot was passed but the `aot` feature is not enabled. \
-            Rebuild with `cargo run --features aot -p prover -- --aot`."
-        );
-        std::process::exit(2);
+const DEFAULT_N: u32 = 100;
+
+const USAGE: &str = "usage: prover execute [n] | prove <proof-file> [n] | verify <proof-file>";
+
+fn main() -> ExitCode {
+    match run() {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("error: {e}");
+            ExitCode::FAILURE
+        }
     }
+}
 
-    // Both default and AOT paths run the template's own rv64 guest ELF.
-    // aot-generated/ must have been populated from this same ELF via
-    // `generate_crates` beforehand when --aot is used; see README.
-    let elf = load_elf("../app/elf/riscv64im-pico-zkvm-elf");
+fn run() -> Result<(), Box<dyn Error>> {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let elf = std::fs::read(ELF_PATH)
+        .map_err(|e| format!("{ELF_PATH}: {e}; build the guest with `cargo pico build` in app/"))?;
 
+    // Each arm reads its arguments before keygen, which takes seconds.
+    match args.as_slice() {
+        ["execute", n @ ..] => {
+            // Emulation only, without keygen: seconds, and nothing is proved.
+            let n = parse_n(n)?;
+            let execution = builder(&elf).execute(Stdin::from(&n))?;
+            let values = check(&execution.committed_bytes, Some(n))?;
+            println!(
+                "executed {} cycle(s) in {} chunk(s); the guest committed F({}) = ({}, {}), not proved",
+                execution.cycles, execution.chunks, values.n, values.a, values.b
+            );
+        }
+        ["prove", path, n @ ..] => {
+            let n = parse_n(n)?;
+            let mut prover = builder(&elf).build()?;
+            let proof = prover.prove_to(Stdin::from(&n), Phase::Riscv)?;
+            let values = check(proof.committed().as_bytes(), Some(n))?;
+            proof.write(path)?;
+            println!(
+                "proved F({}) = ({}, {}) and wrote {path}",
+                values.n, values.a, values.b
+            );
+            report(&proof);
+        }
+        ["verify", path] => {
+            let artifact = ProofArtifact::read(path)?;
+            let prover = Prover::new(&elf)?;
+            let proof = prover.verify_artifact(artifact)?;
+            let values = check(proof.committed().as_bytes(), None)?;
+            println!(
+                "verified {path}: the proof commits F({}) = ({}, {})",
+                values.n, values.a, values.b
+            );
+            report(&proof);
+        }
+        _ => return Err(USAGE.into()),
+    }
+    Ok(())
+}
+
+/// The options `execute` and `prove` emulate with.
+fn builder(elf: &[u8]) -> ProverBuilder {
+    let builder = Prover::builder(elf);
     #[cfg(feature = "aot")]
-    let client = if aot {
-        // Register the AOT factory, then construct the client with
-        // SnapshotMainMode::Aot explicitly selected. The SDK no longer
-        // auto-flips the default based on registration state — callers opt
-        // in through EmulatorOpts so the AOT path is never taken by accident.
-        aot_glue::register_with_vm();
-        let opts = pico_vm::emulator::opts::EmulatorOpts::default()
-            .with_snapshot_main(pico_vm::emulator::opts::SnapshotMainMode::Aot);
-        DefaultProverClient::new_with_opts(&elf, opts)
-    } else {
-        DefaultProverClient::new(&elf)
-    };
+    let builder = builder.aot(&pico_aot_dispatch::AOT);
+    builder
+}
 
-    #[cfg(not(feature = "aot"))]
-    let client = DefaultProverClient::new(&elf);
+fn parse_n(args: &[&str]) -> Result<u32, Box<dyn Error>> {
+    match args {
+        [] => Ok(DEFAULT_N),
+        [n] => Ok(n.parse().map_err(|e| format!("n = `{n}`: {e}"))?),
+        _ => Err(USAGE.into()),
+    }
+}
 
-    let mut stdin_builder = client.new_stdin_builder();
+/// Decode what the guest committed, the way a Solidity verifier would, and hold it to the sequence
+/// recomputed here. Validated decoding re-encodes and compares, so bytes that are not exactly one
+/// struct's encoding are refused. `asked` is the `n` this process gave the guest, if it gave one.
+fn check(committed: &[u8], asked: Option<u32>) -> Result<PublicValuesStruct, Box<dyn Error>> {
+    let values = PublicValuesStruct::abi_decode(committed, true)
+        .map_err(|e| format!("the committed bytes are not a PublicValuesStruct: {e}"))?;
+    if let Some(asked) = asked.filter(|&asked| asked != values.n) {
+        return Err(format!(
+            "the guest commits F({}), not the F({asked}) it was given",
+            values.n
+        )
+        .into());
+    }
+    let (a, b) = fibonacci(0, 1, values.n);
+    if (values.a, values.b) != (a, b) {
+        return Err(format!(
+            "the guest commits F({}) = ({}, {}), not ({a}, {b})",
+            values.n, values.a, values.b
+        )
+        .into());
+    }
+    Ok(values)
+}
 
-    let n = 10u32;
-    stdin_builder.write(&n);
-
-    let current_dir = env::current_dir().expect("Failed to get current directory");
-    let output_path = current_dir.join("../contracts/test_data");
-
-    // Set up groth16 verifier and generate pico proof
-    // The first parameter `need_setup = true` ensures the Groth16 verifier is set up,
-    // but this setup is required only once.
-    client
-        .prove_evm(stdin_builder, true, output_path.clone(), "kb")
-        .expect("Failed to generate evm proof");
+/// Both commands that print this run in dev mode, and `verify_artifact` refuses a file from the
+/// other mode.
+fn report(proof: &Proof) {
+    if !proof.binds_complete_execution() {
+        eprintln!(
+            "note: a {} proof binds each chunk, not one complete execution",
+            proof.phase()
+        );
+    }
+    println!(
+        "program id (dev mode, not the id an on-chain verifier pins): {}",
+        proof.program_id()
+    );
 }
