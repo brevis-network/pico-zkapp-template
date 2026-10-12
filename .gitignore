@@ -13,3 +13,6 @@
 # tag pinned in Cargo.toml is not yet published. Copy
 # .cargo/config.toml.example and edit the paths to match your machine.
 /.cargo/config.toml
+
+# What the quick start writes.
+*.pico
