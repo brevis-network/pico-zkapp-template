@@ -1,9 +1,24 @@
-// Bootstrap stub. Overwritten by `generate_crates` against your current
-// guest ELF. Building --features aot WITHOUT having run generate_crates
-// first will fail to link because this stub does not export the symbols
-// the prover's aot_glue module needs (run_aot, plus the real
-// AotEmulatorCore API surface from the dispatch crate).
-//
-// Fix: run `generate_crates app/elf/riscv64im-pico-zkvm-elf ./aot-generated`
-// (see README, "AOT mode" section).
+//! Bootstrap stub for `pico-aot-dispatch`, replaced wholesale when the AOT code is generated from
+//! a guest's ELF (`cargo pico aot`, or `generate_crates <elf> aot-generated`).
+//!
+//! It exports what a generated crate exports, so dependents build before any code is generated.
+//! Its [`AOT`] is [`AotProgram::STUB`], which has no compiled code and which
+//! `pico_aot_runtime::register` refuses.
+
 pub use pico_aot_runtime::AotEmulatorCore;
+use pico_aot_runtime::AotProgram;
+
+pub static AOT: AotProgram = AotProgram::STUB;
+
+/// Interprets every block: the stub has no compiled code.
+pub fn run_aot(emu: &mut AotEmulatorCore) -> Result<(), String> {
+    AOT.run(emu)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn the_stub_exports_the_stub_program() {
+        assert!(super::AOT.is_stub());
+    }
+}

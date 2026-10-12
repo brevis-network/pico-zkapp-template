@@ -1,125 +1,93 @@
 # pico-zkapp-template
 
-Minimal Fibonacci-on-Pico example.
+Minimal Fibonacci-on-Pico example: a guest program that computes a Fibonacci number, and a host
+prover that runs it, proves it and verifies the proof.
 
 ## Prerequisites
 
-Resolve the latest Pico release once — every command below uses `$PICO_TAG`:
+Install the Pico CLI, then the Pico guest toolchain (one time):
 
 ```
-export PICO_TAG=$(curl -fsSL -o /dev/null -w '%{url_effective}' \
-  https://github.com/brevis-network/pico/releases/latest | sed 's#.*/tag/##')
-echo "Using Pico $PICO_TAG"
-```
-
-This follows GitHub's own "latest release" pointer, so pre-releases are skipped.
-To pin a specific version instead, just set it yourself: `export PICO_TAG=v2.1.1`.
-
-Keep it as one variable rather than repeating the tag: the AOT codegen binary and
-the `pico-aot-runtime` that your generated chunks link against have to be the same
-version, and writing the tag out separately in each command makes it easy to bump
-only one of them.
-
-Install the Pico CLI:
-
-```
-cargo +nightly-2025-08-04 install --force \
-  --git https://github.com/brevis-network/pico \
-  --tag "$PICO_TAG" \
-  pico-cli
-```
-
-The `nightly-2025-08-04` pin comes from Pico's own `rust-toolchain`. If you move to
-a much newer `PICO_TAG`, check that file at your tag in case it changed.
-
-Install the Pico guest toolchain (one time):
-
-```
+cargo +nightly-2026-09-27 install --git https://github.com/brevis-network/pico --tag v3.0.0 pico-cli
 cargo pico install
 ```
 
+`nightly-2026-09-27` is the toolchain Pico v3.0.0 builds with on the host, and this repository's
+`rust-toolchain` pins the same one for the prover. The guest is built with the `pico` toolchain
+that `cargo pico install` sets up; `cargo pico build` selects it for you.
+
 ## Quick start
 
-Create a project and build the guest ELF:
+Create a project, build the guest ELF, then run it, prove it and verify the proof:
 
 ```
-cargo pico new --template basic my-app
-cd my-app/app && cargo pico build
+cargo pico new my-app
+cd my-app
+(cd app && cargo pico build)
+cargo run --release -p prover -- execute 100
+cargo run --release -p prover -- prove fib.pico 100
+cargo run --release -p prover -- verify fib.pico
 ```
 
-Prove:
+- `cargo pico build` compiles `app/` to `app/elf/riscv64im-pico-zkvm-elf`. Run it again whenever
+  `app/` or `lib/` changes.
+- `execute 100` runs the guest in the emulator with `n = 100`, without proving it. It takes seconds,
+  and nothing it prints is proved, so the guest's output is shown as raw bytes.
+- `prove fib.pico 100` proves the guest with `n = 100`, verifies the proof, checks the Fibonacci
+  values the guest committed, and writes the proof to `fib.pico`.
+- `verify fib.pico` reads the file in a new process, verifies it against the ELF, and prints the
+  values the proof commits.
+
+`prove` and `verify` each print the values the proof commits:
 
 ```
-cd ../prover
-VK_VERIFICATION=false cargo run --release
+proved F(100) = (3736710778780434371, 1298777728820984005) and wrote fib.pico
+verified fib.pico: the proof commits F(100) = (3736710778780434371, 1298777728820984005)
 ```
 
-Expected output:
+On a 10-core laptop `prove` takes about a minute and peaks at about 6 GB of memory.
+
+## What the proof is
+
+The prover runs in dev mode, and `fib.pico` holds the proof of the RISC-V phase.
+
+- **It verifies in another process, from the ELF alone.** That is what `verify` shows: it holds
+  nothing from the run that proved, only the file and `app/elf/riscv64im-pico-zkvm-elf`. The
+  values it prints are read from the verified proof, not from bytes stored beside it.
+- **It is not an on-chain proof.** A contract verifies a Groth16 proof made in whitelist mode, where
+  the same ELF has a different program id. For that flow, start from the `evm` template:
+  `cargo pico new --template evm my-app`.
+- **It binds the output to a set of separately proved chunks**, not to one complete execution.
+  `Prover::prove` goes on to the combine phase, which does, but its result verifies outside the
+  process that proved it only against a whitelist.
+
+## Where to change things
+
+| file | what it is |
+|---|---|
+| `app/src/main.rs` | the guest: reads `n` with `pico_sdk::io::read_as`, commits a `FibonacciData` with `pico_sdk::io::commit` |
+| `lib/src/lib.rs` | code the guest and the host share |
+| `prover/src/main.rs` | the host: one `Stdin::write` per guest `read_as`, one `proof.committed().read::<T>()` per guest `commit(&T)` |
+
+## AOT mode
+
+The prover can emulate the guest with ahead-of-time compiled code instead of the interpreter. Only
+emulation changes: the circuits and the program id are the interpreter's, so the proof verifies
+exactly as one made without it, and `verify` needs no AOT code.
 
 ```
-Public value n: 100, a: 3736710778780434371, b: 1298777728820984005
+cargo pico aot --elf app/elf/riscv64im-pico-zkvm-elf --out aot-generated
+cargo run --release -p prover --features aot -- prove fib.pico 100
 ```
 
-`VK_VERIFICATION=false` is needed while running stock shapes against a
-freshly-built guest ELF on this release.
-
-## AOT mode (experimental)
-
-Opt-in path that drives the snapshot-main thread with the AOT emulator
-(`SnapshotMainMode::Aot`) instead of the interpreter. AOT chunks are
-generated from your own guest ELF, so the flow has one extra prep step
-you re-run whenever `app/src/*.rs` changes.
-
-### One-time setup
-
-Install the AOT codegen binary:
-
-```
-cargo +nightly-2025-08-04 install --force \
-  --git https://github.com/brevis-network/pico \
-  --tag "$PICO_TAG" \
-  pico-aot-codegen
-```
-
-### Every time the guest changes
-
-Rebuild the guest ELF, regenerate AOT chunks against it, then prove. Run these
-from this repository's root:
-
-```
-cd app && cargo pico build
-cd ..
-
-PICO_AOT_RUNTIME_SPEC="git = \"https://github.com/brevis-network/pico\", tag = \"$PICO_TAG\"" \
-  generate_crates app/elf/riscv64im-pico-zkvm-elf ./aot-generated
-
-cd prover
-VK_VERIFICATION=false cargo run --release --features aot -- --aot
-```
-
-`PICO_AOT_RUNTIME_SPEC` tells the codegen tool to emit `pico-aot-runtime`
-as a git dep in the generated chunk Cargo.tomls, so `aot-generated/` can
-live at the template root without a local pico checkout.
-
-Expected: the console prints these two banners
-
-```
-========== [AOT-PIPELINE] RISCV prove via emulate_snapshot_pipeline (snapshot_main=Aot) ==========
-########## [AOT] snapshot-main = AotMetaEmulator (running AOT-compiled chunks) ##########
-```
-
-followed by the same `Public value n: 100, ...` line as the default path.
-
-### Notes on AOT mode
-
-- `aot-generated/` is specific to your current guest ELF. If `app/src/*.rs`
-  changes, re-run `cargo pico build` and `generate_crates`; otherwise the
-  chunks' PC ranges will no longer match and AOT will silently fall back
-  to the interpreter.
-- `aot-generated/` is gitignored apart from a minimal bootstrap stub.
-  Never commit the regenerated contents.
-
-## Layout notes
-
-- `app/elf/riscv64im-pico-zkvm-elf` is the default guest ELF, produced by
-  `cargo pico build` inside `app/`.
+- `cargo pico aot` compiles the ELF into the `pico-aot-dispatch` crate in `aot-generated/`, with
+  its chunk crates under `aot-generated/chunks/`.
+- **Re-run it after every `cargo pico build`.** The generated crate records the SHA-256 of the ELF
+  it came from, and the prover refuses one generated from another ELF.
+- Before the first `cargo pico aot`, `--features aot` builds against the committed stub, which the
+  prover refuses with an error telling you to run `cargo pico aot`.
+- The generated crates take `pico-aot-runtime` from the release tag of the `cargo pico` that
+  generated them, so use the CLI of the release this template pins (`v3.0.0`). Another tag is a
+  second copy of Pico, and the generated code does not build against the prover.
+- `aot-generated/` is gitignored apart from the stub, and the generated contents are never
+  committed. `git checkout -- aot-generated && rm -rf aot-generated/chunks` restores the stub.

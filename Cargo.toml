@@ -7,7 +7,8 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v2.1.1" }
+pico-sdk = { git = "https://github.com/brevis-network/pico", tag = "v3.0.0" }
+pico-prover = { git = "https://github.com/brevis-network/pico", tag = "v3.0.0" }
 serde = { version = "1.0.205", features = ["derive"] }
 
 [profile.release]
