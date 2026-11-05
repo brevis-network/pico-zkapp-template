@@ -8,11 +8,12 @@ prover that runs it, proves it and verifies the proof.
 Install the Pico CLI, then the Pico guest toolchain (one time):
 
 ```
-cargo +nightly-2026-09-27 install --git https://github.com/brevis-network/pico --tag v3.0.0 pico-cli
+rustup toolchain install nightly-2026-09-27
+cargo +nightly-2026-09-27 install --git https://github.com/brevis-network/pico --tag v3.1.1 --locked pico-cli
 cargo pico install
 ```
 
-`nightly-2026-09-27` is the toolchain Pico v3.0.0 builds with on the host, and this repository's
+`nightly-2026-09-27` is the toolchain Pico v3.1.1 builds with on the host, and this repository's
 `rust-toolchain` pins the same one for the prover. The guest is built with the `pico` toolchain
 that `cargo pico install` sets up; `cargo pico build` selects it for you.
 
@@ -45,7 +46,7 @@ proved F(100) = (3736710778780434371, 1298777728820984005) and wrote fib.pico
 verified fib.pico: the proof commits F(100) = (3736710778780434371, 1298777728820984005)
 ```
 
-On a 10-core laptop `prove` takes about a minute and peaks at about 6 GB of memory.
+On a 124-core machine `prove` takes about 10 s and peaks at about 2.4 GiB of memory.
 
 ## What the proof is
 
@@ -87,7 +88,7 @@ cargo run --release -p prover --features aot -- prove fib.pico 100
 - Before the first `cargo pico aot`, `--features aot` builds against the committed stub, which the
   prover refuses with an error telling you to run `cargo pico aot`.
 - The generated crates take `pico-aot-runtime` from the release tag of the `cargo pico` that
-  generated them, so use the CLI of the release this template pins (`v3.0.0`). Another tag is a
+  generated them, so use the CLI of the release this template pins (`v3.1.1`). Another tag is a
   second copy of Pico, and the generated code does not build against the prover.
 - `aot-generated/` is gitignored apart from the stub, and the generated contents are never
   committed. `git checkout -- aot-generated && rm -rf aot-generated/chunks` restores the stub.
