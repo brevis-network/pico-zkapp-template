@@ -1,6 +1,6 @@
 /target
 
-# aot-generated/ is populated by `generate_crates` against the current
+# aot-generated/ is populated by `cargo pico aot` against the current
 # guest ELF; ship only the minimal bootstrap skeleton so Cargo can resolve
 # the optional `pico-aot-dispatch` path dep even before codegen has run.
 /aot-generated/*
@@ -13,3 +13,9 @@
 # tag pinned in Cargo.toml is not yet published. Copy
 # .cargo/config.toml.example and edit the paths to match your machine.
 /.cargo/config.toml
+
+# What the quick start writes: proofs, and the output and Groth16 key set of `prove --evm`
+# (the proving key alone is gigabytes). The README copies what the contracts need out of them.
+*.pico
+/out/
+/keys/
