@@ -1,13 +1,18 @@
 # Local dev override. Copy to .cargo/config.toml and adjust the paths to
 # match where you have the pico source tree checked out. Gitignored; never
-# commit the actual config.toml.
+# commit the actual config.toml, nor a Cargo.lock resolved under it: that
+# lock records the local packages, and breaks the build for everyone else.
 #
-# Needed when the template's git deps reference a tag that
-# has not yet been published to brevis-network/pico. With these patches
-# in place, Cargo resolves pico-sdk/pico-vm/pico-aot-runtime against your
-# local checkout instead of trying to fetch the unpublished tag.
+# With these patches in place, Cargo resolves pico-sdk/pico-prover/pico-aot-runtime
+# against your local checkout instead of the tag pinned in Cargo.toml. A patch
+# only stands in for the git source once Cargo.lock records the patched
+# package, though: until then Cargo still fetches the tag, and fails if it has
+# not been published yet. Seed the lock once in that case: point the three
+# pico dependencies (two in Cargo.toml, one in aot-generated/Cargo.toml) at the
+# same paths with `path = "..."`, run `cargo metadata --format-version 1`, then
+# put the git dependencies back.
 
 [patch."https://github.com/brevis-network/pico"]
 pico-sdk         = { path = "/absolute/path/to/pico/sdk/sdk" }
-pico-vm          = { path = "/absolute/path/to/pico/vm" }
+pico-prover      = { path = "/absolute/path/to/pico/sdk/prover" }
 pico-aot-runtime = { path = "/absolute/path/to/pico/aot-runtime" }
