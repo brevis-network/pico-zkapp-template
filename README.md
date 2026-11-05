@@ -9,11 +9,12 @@ that check the on-chain proof.
 Install the Pico CLI, then the Pico guest toolchain (one time):
 
 ```
-cargo +nightly-2026-09-27 install --git https://github.com/brevis-network/pico --tag v3.0.0 pico-cli
+rustup toolchain install nightly-2026-09-27
+cargo +nightly-2026-09-27 install --git https://github.com/brevis-network/pico --tag v3.1.1 --locked pico-cli
 cargo pico install
 ```
 
-`nightly-2026-09-27` is the toolchain Pico v3.0.0 builds with on the host, and this repository's
+`nightly-2026-09-27` is the toolchain Pico v3.1.1 builds with on the host, and this repository's
 `rust-toolchain` pins the same one for the prover. The guest is built with the `pico` toolchain
 that `cargo pico install` sets up; `cargo pico build` selects it for you.
 
@@ -39,7 +40,7 @@ cargo run --release -p prover -- verify fib.pico
   and writes the proof to `fib.pico`. `verify fib.pico` verifies the file in a new process.
 
 ```
-executed 9632 cycle(s) in 1 chunk(s); the guest committed F(10) = (55, 89), not proved
+executed 9206 cycle(s) in 1 chunk(s); the guest committed F(10) = (55, 89), not proved
 proved F(10) = (55, 89) and wrote fib.pico
 verified fib.pico: the proof commits F(10) = (55, 89)
 ```
@@ -55,9 +56,10 @@ the wrap circuit to Groth16. Its `inputs.json` holds what the contract is called
 
 ```
 cd app && cargo pico build && cd ..
-# Once, in a checkout of https://github.com/brevis-network/pico at v3.0.0; or set PICO_GNARK_BIN
-# to a built pico-gnark binary instead of PICO_GNARK_IMAGE.
-docker build -f gnark/Dockerfile -t pico-gnark .
+# Once: the gnark image, built from Pico's v3.1.1 source; or set PICO_GNARK_BIN to a built
+# pico-gnark binary instead of PICO_GNARK_IMAGE (see Pico's gnark/README.md).
+git clone --depth 1 --branch v3.1.1 https://github.com/brevis-network/pico ../pico
+(cd ../pico && docker build -f gnark/Dockerfile -t pico-gnark .)
 
 VK_VERIFICATION=true \
 MLE_VK_MAP=whitelist/mle_vk_map_kb.bin \
@@ -67,10 +69,10 @@ PICO_GNARK_IMAGE=pico-gnark \
     --evm --setup --keys keys --output out
 cp out/inputs.json contracts/test_data/
 cp keys/Groth16Verifier.sol keys/manifest.json contracts/test/dev/
-cd contracts && forge test
+(cd contracts && forge test)
 ```
 
-- `whitelist/` is the recursion whitelist of Pico v3.0.0 and its root, the value the release
+- `whitelist/` is the recursion whitelist of Pico v3.1.1 and its root, the value the release
   publishes. Whitelist mode proves against it, and the wrap circuit bakes its root in.
 - The program id the command prints is the one a contract pins: `inputs.json`'s `riscvVKey`, which
   `Fibonacci` takes at deployment. It is the whitelist-mode id, so it differs from the dev-mode id
@@ -79,8 +81,8 @@ cd contracts && forge test
   `--keys keys` and no `--setup`.
 
 **The machine.** This is not a laptop flow. On a 124-core machine, the `cargo pico prove --evm`
-above, in whitelist mode and including `--setup`, took 5 min 17 s and peaked at 26.8 GiB in
-`cargo pico` itself and 15.9 GiB in the gnark container (sampled separately, every 2 s).
+above, in whitelist mode and including `--setup`, took 5 min 21 s and peaked at 35.3 GiB in
+`cargo pico` itself and 15.4 GiB in the gnark container (sampled separately, every few seconds).
 
 ### The keys in `contracts/test/dev` are test keys
 
@@ -127,7 +129,7 @@ cargo run --release -p prover --features aot -- prove fib.pico 10
 - Before the first `cargo pico aot`, `--features aot` builds against the committed stub, which the
   prover refuses with an error telling you to run `cargo pico aot`.
 - The generated crates take `pico-aot-runtime` from the release tag of the `cargo pico` that
-  generated them, so use the CLI of the release this template pins (`v3.0.0`). Another tag is a
+  generated them, so use the CLI of the release this template pins (`v3.1.1`). Another tag is a
   second copy of Pico, and the generated code does not build against the prover.
 - `aot-generated/` is gitignored apart from the stub, and the generated contents are never
   committed. `git checkout -- aot-generated && rm -rf aot-generated/chunks` restores the stub.
