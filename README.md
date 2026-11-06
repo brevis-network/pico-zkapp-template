@@ -58,8 +58,7 @@ the wrap circuit to Groth16. Its `inputs.json` holds what the contract is called
 cd app && cargo pico build && cd ..
 # Once: the gnark image, built from Pico's v3.1.1 source; or set PICO_GNARK_BIN to a built
 # pico-gnark binary instead of PICO_GNARK_IMAGE (see Pico's gnark/README.md).
-git clone --depth 1 --branch v3.1.1 https://github.com/brevis-network/pico ../pico
-(cd ../pico && docker build -f gnark/Dockerfile -t pico-gnark .)
+docker build -t pico-gnark -f gnark/Dockerfile https://github.com/brevis-network/pico.git#v3.1.1
 
 VK_VERIFICATION=true \
 MLE_VK_MAP=whitelist/mle_vk_map_kb.bin \
