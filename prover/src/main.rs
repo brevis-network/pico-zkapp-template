@@ -58,9 +58,10 @@ fn run() -> Result<(), Box<dyn Error>> {
     // Each arm reads its arguments before keygen, which takes seconds.
     match args.as_slice() {
         ["execute", n @ ..] => {
-            // Emulation only, without keygen: seconds, and nothing is proved.
+            // Emulation only, without keygen: seconds, and nothing is proved. Chunked, as proving
+            // emulates, so the `aot` feature applies to it too.
             let n = parse_n(n)?;
-            let execution = builder(&elf).execute(Stdin::from(&n))?;
+            let execution = builder(&elf).execute_chunked(Stdin::from(&n))?;
             println!(
                 "executed {} cycle(s) in {} chunk(s); the guest committed {} byte(s), not proved: {}",
                 execution.cycles,
